@@ -20,22 +20,24 @@ from ptsemseg.augmentations import *
 def train(args):
 
     # Setup Augmentations
-    data_aug= Compose([RandomRotate(10),                                        
+    data_aug = Compose([RandomCrop(224),
                        RandomHorizontallyFlip()])
 
     # Setup Dataloader
     data_loader = get_loader(args.dataset)
     data_path = get_data_path(args.dataset)
-    t_loader = data_loader(data_path, is_transform=True, img_size=(args.img_rows, args.img_cols), augmentations=data_aug)
+
+    t_loader = data_loader(data_path, is_transform=True, img_size=(args.img_rows, args.img_cols), 
+                            augmentations=data_aug)
     v_loader = data_loader(data_path, is_transform=True, split='val', img_size=(args.img_rows, args.img_cols))
 
     n_classes = t_loader.n_classes
-    trainloader = data.DataLoader(t_loader, batch_size=args.batch_size, num_workers=8, shuffle=True)
-    valloader = data.DataLoader(v_loader, batch_size=args.batch_size, num_workers=8)
+    trainloader = data.DataLoader(t_loader, batch_size=args.batch_size, num_workers=0, shuffle=True)
+    valloader = data.DataLoader(v_loader, batch_size=args.batch_size, num_workers=0)
 
     # Setup Metrics
     running_metrics = runningScore(n_classes)
-        
+
     # Setup visdom for visualization
     if args.visdom:
         vis = visdom.Visdom()
@@ -49,10 +51,10 @@ def train(args):
 
     # Setup Model
     model = get_model(args.arch, n_classes)
-    
+
     model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
     model.cuda()
-    
+
     # Check if model has custom optimizer / loss
     if hasattr(model.module, 'optimizer'):
         optimizer = model.module.optimizer
@@ -65,13 +67,13 @@ def train(args):
     else:
         loss_fn = cross_entropy2d
 
-    if args.resume is not None:                                         
+    if args.resume is not None:
         if os.path.isfile(args.resume):
             print("Loading model and optimizer from checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             model.load_state_dict(checkpoint['model_state'])
             optimizer.load_state_dict(checkpoint['optimizer_state'])
-            print("Loaded checkpoint '{}' (epoch {})"                    
+            print("Loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
             print("No checkpoint found at '{}'".format(args.resume)) 
