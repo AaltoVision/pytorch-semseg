@@ -5,7 +5,6 @@ import torchvision
 import numpy as np
 import scipy.misc as m
 import matplotlib.pyplot as plt
-
 from torch.utils import data
 from ptsemseg.augmentations import *
 
@@ -37,8 +36,9 @@ class camvidLoader(data.Dataset):
         img = np.array(img, dtype=np.uint8)
 
         lbl = m.imread(lbl_path)
-        lbl = np.array(lbl, dtype=np.int8)
-        
+        lbl = np.array(lbl, dtype=np.uint8)
+
+
         if self.augmentations is not None:
             img, lbl = self.augmentations(img, lbl)
 
@@ -54,9 +54,9 @@ class camvidLoader(data.Dataset):
         img = img.astype(float) / 255.0
         # NHWC -> NCHW
         img = img.transpose(2, 0, 1)
-
         img = torch.from_numpy(img).float()
         lbl = torch.from_numpy(lbl).long()
+
         return img, lbl
 
     def decode_segmap(self, temp, plot=False):
