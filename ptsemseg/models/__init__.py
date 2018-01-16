@@ -5,6 +5,7 @@ from ptsemseg.models.segnet import *
 from ptsemseg.models.unet import *
 from ptsemseg.models.pspnet import *
 from ptsemseg.models.linknet import *
+from ptsemseg.models.tiramisu import *
 from ptsemseg.models.frrn import *
 
 
@@ -30,7 +31,13 @@ def get_model(name, n_classes):
                       is_batchnorm=True,
                       in_channels=3,
                       is_deconv=True)
-    
+    elif name == 'tiramisu':
+        model = model(n_classes=n_classes,
+                        num_init_features=48,
+                        growth_rate=12,
+                        encoder_cf='4-4-4-4-4',
+                        bottleneck_cf=4,
+                        decoder_cf='4-4-4-4-4')
     else:
         model = model(n_classes=n_classes)
 
